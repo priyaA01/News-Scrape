@@ -1,0 +1,28 @@
+{
+  "name": "News-Scrape",
+  "version": "1.0.0",
+  "description": "A web app that lets users view and leave comments on the latest news. Mongoose and Cheerio are used to scrape news from another site.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/priyaA01/News-Scrape.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/priyaA01/News-Scrape/issues"
+  },
+  "homepage": "https://github.com/priyaA01/News-Scrape#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cheerio": "^1.0.0-rc.2",
+    "express": "^4.16.3",
+    "express-handlebars": "^3.0.0",
+    "mongoose": "^5.0.11",
+    "request": "^2.85.0"
+  }
+}
