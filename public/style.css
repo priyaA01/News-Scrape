@@ -1,0 +1,12 @@
+/* body{
+	background-image: url("background.jpg");
+} */
+
+.container{
+	position: relative;
+}
+
+img{
+	min-width: 100%;
+	/* opacity:0.5; */
+}
