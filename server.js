@@ -8,6 +8,7 @@ var cheerio = require("cheerio");
 // Makes HTTP request for HTML page
 //or use axios
 var request = require("request");
+var axios = require("axios");
 
 // Require all models
 var db = require("./models");
@@ -36,58 +37,29 @@ mongoose.connect(MONGODB_URI, {
   //useMongoClient: true
 });
 
-
-// A GET route for scraping the New York Times website
+// A GET route for scraping the echojs website
 app.get("/scrape", function(req, res) {
-// First, tell the console what server.js is doing
-console.log("\n***********************************\n" +
-            "Grabbing records from New York Times:" +
-            "\n***********************************\n");
+  // First, we grab the body of the html with request
+  axios.get("https://www.nytimes.com/section/sports?action=click&pgtype=Homepage&region=TopBar&module=HPMiniNav&contentCollection=Sports&WT.nav=page").then(function(response) {
+    // Then, we load that into cheerio and save it to $ for a shorthand selector
+    var $ = cheerio.load(response.data);
 
-// Making a request for fox news. The page's HTML is passed as the callback's third argument
-request("https://www.nytimes.com/section/sports?action=click&pgtype=Homepage&region=TopBar&module=HPMiniNav&contentCollection=Sports&WT.nav=page", function(error, response, html) {
+    // Now, we grab every h2 within an article tag, and do the following:
+    $("article.theme-summary").each(function(i, element) {
+      // Save an empty result object
+      var result = {};
+ 
+      result.title = $(this).children("div.story-body").children("h2.headline").children("a").text();
 
-  // Load the HTML into cheerio and save it to a variable
-  // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
-  var $ = cheerio.load(html);
+      result.link = $(this).children("figure.photo").children("a").children("img").attr("src");
 
-    // With cheerio, find each p-tag with the "title" class
-  // (i: iterator. element: the current element)
+      result.summary = $(this).children("div.story-body").children("p.summary").text();
 
-  //$("article.story").each(function(i, element) {
-    $("article.story").each(function(i, element) {
+      result.byline = $(this).children("div.story-body").children("p.byline").children("span.author").text();
 
-    // An empty array to save the data that we'll scrape
-    var results = {};
-
-    //.children("div.template-3").children("ol.story-menu").children("li").children("article.story").
-    var summary =$(element).children("div.story-body").children("p.summary").text();
-    // Save the text of the element in a "title" variable
-    var imgURL = $(element).children("figure.media").children("a").attr("href");
-
-    var title =$(element).children("div.story-body").children("h2.headline").children("a").text();
-
-    var byline = $(element).children("div.story-body").children("p.byline").children("span.author").text();
-
-
-    // Save these results in an object that we'll push into the results array we defined earlier
-    if(title != "")
-    {
-      console.log("empty obj");
-      /*results.push({
-        title: title,
-        byline: byline,
-        summary:summary,
-        imgURL:imgURL
-      });*/
-      results.title = title;
-      results.byline = byline;
-      results.summary = summary;
-      results.imgURL = imgURL;
-    }
-    console.log(results);
-    // Create a new Article using the `result` object built from scraping
-      db.Article.create(results)
+      console.log(result.link);
+      // Create a new Article using the `result` object built from scraping
+      db.Article.create(result)
         .then(function(dbArticle) {
           // View the added result in the console
           console.log(dbArticle);
@@ -96,16 +68,13 @@ request("https://www.nytimes.com/section/sports?action=click&pgtype=Homepage&reg
           // If an error occurred, send it to the client
           return res.json(err);
         });
-    
+    });
+
+    // If we were able to successfully scrape and save an Article, send a message to the client
+    res.send("Scrape Complete");
   });
-
-  // Log the results once you've looped through each of the elements found with cheerio
-  //if(results)
-  // If we were able to successfully scrape and save an Article, send a message to the client
-    //res.send("Scrape Complete");
 });
 
-});
 
 // Route for getting all Articles from the db
 app.get("/articles", function(req, res) {
@@ -148,6 +117,31 @@ app.post("/articles/:id", function(req, res) {
       return db.Article.findOneAndUpdate({ _id: req.params.id }, { note: dbNote._id }, { new: true });
     })
     .then(function(dbArticle) {
+      // If we were able to successfully update an Article, send it back to the client
+      res.json(dbArticle);
+    })
+    .catch(function(err) {
+      // If an error occurred, send it to the client
+      res.json(err);
+    });
+});
+
+// Delete One from the DB
+app.get("/delete/:id", function(req, res) {
+  // Remove a note using the objectID
+    db.Note.remove(
+    {
+      _id: req.params.id
+    })
+    .then(function(dbNote) {
+      // If a Note was created successfully, find one Article with an `_id` equal to `req.params.id`. Update the Article to be associated with the new Note
+      // { new: true } tells the query that we want it to return the updated User -- it returns the original by default
+      // Since our mongoose query returns a promise, we can chain another `.then` which receives the result of the query
+      return db.Article.findOne({ _id: req.params.id }, function(err, data){
+              data.note.remove()
+            });
+    })
+  .then(function(dbArticle) {
       // If we were able to successfully update an Article, send it back to the client
       res.json(dbArticle);
     })
