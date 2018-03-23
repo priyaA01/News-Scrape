@@ -1,16 +1,26 @@
 body {
-	background-color: #F2F6D0;
-	background-image: url("background.png");
+	background-color: #F2F6D0;	
+}
+.page-header{
+	padding:50px;
+	background-image: url("background.png") !important; 
 	background-repeat: no-repeat;
 	background-position: center center;
+	background-size: contain;
 }
-
 #btnScrape{
+	float:right;
 	margin-right:5px;
 }
-#articles {
+.article
+{
 	border: 1px solid black;
-	/* box-shadow: 5px 10px #888888; */
+	box-shadow: 5px 10px #888888;
+	padding:10px;
+}
+#articles {
+	padding:10px;
+	border: 1px solid white;
 	display: inline-block;
 	overflow: auto;
 	width: 100%;
@@ -39,9 +49,3 @@ textarea {
 	font-size: 18px;
 }
 
-/* For width 400px and larger: */
-@media only screen and (max-width: 700px) {
-    body { 
-        background-size:90% auto;
-    }
-}
