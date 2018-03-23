@@ -6,7 +6,6 @@ var mongoose = require("mongoose");
 // Parses our HTML and helps us find elements
 var cheerio = require("cheerio");
 // Makes HTTP request for HTML page
-//or use axios
 var request = require("request");
 var axios = require("axios");
 
@@ -14,12 +13,10 @@ var axios = require("axios");
 var db = require("./models");
 
 var PORT = 3000;
-
 // Initialize Express
 var app = express();
 
 // Configure middleware
-
 // Use morgan logger for logging requests
 app.use(logger("dev"));
 // Use body-parser for handling form submissions
@@ -39,14 +36,14 @@ mongoose.connect(MONGODB_URI, {
   //useMongoClient: true
 });
 
-// A GET route for scraping the echojs website
+// A GET route for scraping the nytimes website
 app.get("/scrape", function (req, res) {
   // First, we grab the body of the html with request
   axios.get("https://www.nytimes.com/section/sports?action=click&pgtype=Homepage®ion=TopBar&module=HPMiniNav&contentCollection=Sports&WT.nav=page").then(function (response) {
     // Then, we load that into cheerio and save it to $ for a shorthand selector
     var $ = cheerio.load(response.data);
 
-    // Now, we grab every h2 within an article tag, and do the following:
+    // Now, we grab every element within an article tag, and do the following:
     $("article.theme-summary").each(function (i, element) {
       // Save an empty result object
       var result = {};
@@ -60,7 +57,6 @@ app.get("/scrape", function (req, res) {
       result.byline = $(this).children("div.story-body").children("p.byline").children("span.author").text();
 
       // Create a new Article using the `result` object built from scraping
-
       db.Article.create(result)
         .then(function (dbArticle) {
           // View the added result in the console
@@ -72,9 +68,8 @@ app.get("/scrape", function (req, res) {
         });
     });
 
-    // If we were able to successfully scrape and save an Article, send a message to the client
-    //res.send("Scrape Complete");
-    res.redirect("/articles");
+    // If we were able to successfully scrape and save an Article, 
+     res.redirect("/");
   });
 });
 
@@ -86,7 +81,6 @@ app.get("/articles", function (req, res) {
     .then(function (dbArticle) {
       // If we were able to successfully find Articles, send them back to the client
       res.json(dbArticle);
-      //res.render("index", {articles: data});
     })
     .catch(function (err) {
       // If an error occurred, send it to the client
